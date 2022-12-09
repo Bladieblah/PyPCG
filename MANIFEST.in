@@ -1,0 +1,2 @@
+include src/dyme_module/*.py
+include version-config.yml

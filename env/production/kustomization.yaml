@@ -1,0 +1,28 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+commonLabels:
+  env: production
+
+bases:
+  - ../../workflows/
+
+patchesJson6902:
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: WorkflowTemplate
+      name: dyme-module
+      namespace: workflows
+    path: workflow.patch.yaml
+  - target:
+      version: v1
+      kind: ServiceAccount
+      name: dyme-module-workflow
+      namespace: workflows
+    path: sa.patch.yaml
+
+images:
+- name: ml-builder
+  newName: eu.gcr.io/dyme-production/ml-builder
+  newTag: 2022-02-15--lxSu9Yj3wyXL

@@ -1,0 +1,203 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dyme-module-parallelism
+  namespace: workflows
+data:
+  workflow: "1"
+---
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: dyme-module
+  namespace: workflows
+  labels:
+    ci-name: dyme-module
+spec:
+  serviceAccountName: dyme-module-workflow
+
+  tolerations:
+    - key: preemptible
+      operator: Exists
+      effect: NoSchedule
+
+  nodeSelector:
+    dyme-preemptible-pool: "true"
+
+  synchronization:
+    semaphore:
+      configMapKeyRef:
+        name: dyme-module-parallelism
+        key: workflow
+
+  entrypoint: ci
+#  onExit: exit-handler
+
+  arguments:
+    parameters:
+      - name: environment
+      - name: revision
+      - name: repo
+        value: git@github.com:dyme-org/dyme-module.git
+      - name: project-context
+        value: "src/dyme_module"
+
+  templates:
+    - name: ci
+      dag:
+        tasks:
+          - name: checkout
+            templateRef:
+              name: t-checkout
+              template: checkout
+            arguments:
+              parameters:
+                - name: repo
+                  value: "{{workflow.parameters.repo}}"
+                - name: revision
+                  value: "{{workflow.parameters.revision}}"
+
+          - name: build-id
+            templateRef:
+              name: t-build-id
+              template: build-id
+            arguments:
+              parameters:
+                - name: prefix
+                  value: "{{workflow.creationTimestamp.Y}}-{{workflow.creationTimestamp.m}}-{{workflow.creationTimestamp.d}}"
+
+          - name: download-dataset
+            templateRef:
+              name: t-download-files-from-google-storage
+              template: download-files-from-google-storage
+            arguments:
+              parameters:
+                - name: bucket-name
+                  value: "k8s-{{workflow.parameters.environment}}-dyme-dyme-module-ml"
+                - name: file-names
+                  value: "trainData.csv"
+
+          - name: train-model
+            template: train-model
+            dependencies: [ checkout, download-dataset ]
+            arguments:
+              parameters:
+                - name: project-context
+                  value: "{{workflow.parameters.project-context}}"
+              artifacts:
+                - name: source
+                  from: "{{tasks.checkout.outputs.artifacts.source}}"
+                - name: files
+                  from: "{{tasks.download-dataset.outputs.artifacts.files}}"
+
+          - name: upload-joblib
+            templateRef:
+              name: t-upload-files-to-google-storage
+              template: upload-files-to-google-storage
+            dependencies: [ build-id, train-model ]
+            arguments:
+              parameters:
+                - name: bucket-name
+                  value: "k8s-{{workflow.parameters.environment}}-dyme-dyme-module-ml"
+                - name: file-names
+                  value: "model.joblib"
+                - name: context
+                  value: "{{workflow.parameters.environment}}/{{tasks.build-id.outputs.result}}/"
+              artifacts:
+                - name: files
+                  from: "{{tasks.train-model.outputs.artifacts.built-source}}"
+
+          - name: package-dependencies
+            templateRef:
+              name: t-package-dependencies
+              template: package-dependencies
+            dependencies: [ train-model ]
+            arguments:
+              artifacts:
+                - name: source
+                  from: "{{tasks.train-model.outputs.artifacts.built-source}}"
+
+          - name: upload-package
+            templateRef:
+              name: t-upload-files-to-google-storage
+              template: upload-files-to-google-storage
+            dependencies: [ build-id, package-dependencies ]
+            arguments:
+              parameters:
+                - name: bucket-name
+                  value: "k8s-{{workflow.parameters.environment}}-dyme-dyme-module-ml"
+                - name: file-names
+                  value: "dist/dyme_module-1.0.tar.gz"
+                - name: context
+                  value: "{{workflow.parameters.environment}}/{{tasks.build-id.outputs.result}}/"
+              artifacts:
+                - name: files
+                  from: "{{tasks.package-dependencies.outputs.artifacts.packaged-source}}"
+
+          - name: delete-ml-version
+            templateRef:
+              name: t-delete-ml-version
+              template: delete-ml-version
+            dependencies: [ upload-package, upload-joblib ]
+            arguments:
+              parameters:
+                - name: environment
+                  value: "{{workflow.parameters.environment}}"
+                - name: model-name
+                  value: "k8s_{{workflow.parameters.environment}}_dyme_module"
+
+          - name: create-ml-version
+            templateRef:
+              name: t-create-ml-version
+              template: create-ml-version
+            dependencies: [ build-id, delete-ml-version ]
+            arguments:
+              parameters:
+                - name: environment
+                  value: "{{workflow.parameters.environment}}"
+                - name: model-name
+                  value: "k8s_{{workflow.parameters.environment}}_dyme_module"
+                - name: model-dir
+                  value: "gs://k8s-{{workflow.parameters.environment}}-dyme-dyme-module-ml/{{workflow.parameters.environment}}/{{tasks.build-id.outputs.result}}/"
+                - name: code-path
+                  value: "gs://k8s-{{workflow.parameters.environment}}-dyme-dyme-module-ml/{{workflow.parameters.environment}}/{{tasks.build-id.outputs.result}}/dyme_module-1.0.tar.gz"
+              artifacts:
+                - name: packaged-source
+                  from: "{{tasks.package-dependencies.outputs.artifacts.packaged-source}}"
+
+
+    - name: train-model
+      activeDeadlineSeconds: 2400
+      inputs:
+        parameters:
+          - name: project-context
+        artifacts:
+          - name: source
+            path: /repo
+          - name: files
+            path: /files
+      outputs:
+        artifacts:
+          - name: built-source
+            path: /repo
+      container:
+        image: ml-builder
+        resources:
+          requests:
+            memory: "2048Mi"
+            cpu: "1000m"
+          limits:
+            memory: "10240Mi"
+            cpu: "8000m"
+        command:
+          - /bin/sh
+          - -ceux
+          - |-
+            cd "/repo/"
+
+            python setup.py build
+            pip install .
+
+            cp -r /files/. /repo/files/
+
+            python -m dyme_module.create_model

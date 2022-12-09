@@ -1,0 +1,32 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+commonLabels:
+  env: staging
+
+configurations:
+  - config.yaml
+
+bases:
+  - ../../workflows/
+
+patchesJson6902:
+- target:
+    group: argoproj.io
+    kind: WorkflowTemplate
+    name: dyme-module
+    namespace: workflows
+    version: v1alpha1
+  path: workflow.patch.yaml
+- target:
+    kind: ServiceAccount
+    name: dyme-module-workflow
+    namespace: workflows
+    version: v1
+  path: sa.patch.yaml
+
+images:
+- name: ml-builder
+  newName: eu.gcr.io/dyme-staging/ml-builder
+  newTag: 2022-05-27--XChnFSYxyzoE
+

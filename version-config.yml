@@ -1,0 +1,2 @@
+autoScaling:
+  minNodes: 1
