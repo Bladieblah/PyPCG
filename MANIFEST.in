@@ -1,2 +1,1 @@
-include src/dyme_module/*.py
-include version-config.yml
+include src/pypcg/*.py

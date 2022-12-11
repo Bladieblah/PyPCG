@@ -1,18 +1,6 @@
-src/data/
-src/files/
 MANIFEST
-src/dist/
-src/testing/
-src/include/*.json
-src/include/*.csv
-src/build/
-src/env/
-src/tmp/
 *__pycache__/
-src/keys/
-src/vendor/
 
-sd_env/
 build/
 dist/
 
@@ -20,10 +8,5 @@ dist/
 
 *.so
 *.egg-info/
-
-src/.env
-src/.env.*
-
-*.joblib
 
 .DS_Store
