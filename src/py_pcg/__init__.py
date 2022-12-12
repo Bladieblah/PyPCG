@@ -1,1 +1,1 @@
-from . import pcg32
+from .pcg32 import PCG32

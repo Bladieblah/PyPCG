@@ -12,6 +12,8 @@ class PCG32:
     >>> rng = PCG32(42, 54)
     >>> rng.randint(2)
     [1070908346, 3346215311]
+    >>> rng.randint(2, bound=100)
+    [67, 65]
     """
     def __init__(self, stream = None, state = None):
         if stream and state:
@@ -22,7 +24,7 @@ class PCG32:
             self.capsule = PCGCPP.construct()
     
     def randint(self, size=1, bound = 0):
-        result = PCGCPP.rand(self.capsule, size, bound)
+        result = PCGCPP.randint(self.capsule, size, bound)
 
         if size == 1:
             return result[0]
