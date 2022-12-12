@@ -7,9 +7,9 @@ Usage:
 ```python
 import py_pcg
 
-rng = py_pcg.pcg32()
-rng = py_pcg.pcg32(42, 9001) # Seed with initial stream and state
+rng = py_pcg.PCG32()
+rng = py_pcg.PCG32(42, 9001) # Seed with initial stream and state
 
-rng.rand()     # Generate a single random number
-rng.rand(1000) # Generate a list of random numbers
+rng.rand()     # Generate a single random uniform number
+rng.randint(1000, bound=100) # Generate a list of bounded random integers
 ```
