@@ -4,13 +4,13 @@ class PCG32:
     """Wrapper around the pcg32 class.
     
     >>> rng = PCG32(42)
-    >>> rng.rand()
+    >>> rng.randint()
     589627368
-    >>> rng.rand()
+    >>> rng.randint()
     2336806640
     
     >>> rng = PCG32(42, 54)
-    >>> rng.rand(2)
+    >>> rng.randint(2)
     [1070908346, 3346215311]
     """
     def __init__(self, stream = None, state = None):
@@ -21,8 +21,8 @@ class PCG32:
         else:
             self.capsule = PCGCPP.construct()
     
-    def rand(self, size=1):
-        result = PCGCPP.rand(self.capsule, size)
+    def randint(self, size=1, bound = 0):
+        result = PCGCPP.rand(self.capsule, size, bound)
 
         if size == 1:
             return result[0]

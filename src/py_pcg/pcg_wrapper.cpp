@@ -31,18 +31,25 @@ PyObject *construct32(PyObject *self, PyObject *args) {
     return Py_BuildValue("O", rngCapsule);
 }
 
-PyObject *rand32(PyObject *self, PyObject *args) {
+PyObject *randint32(PyObject *self, PyObject *args) {
     vector<uint32_t> result;
     uint32_t size = 1;
+    uint32_t bound = 0;
     
     PyObject *rngCapsule = NULL;
-    PyArg_ParseTuple(args, "O|I", &rngCapsule, &size);
+    PyArg_ParseTuple(args, "O|II", &rngCapsule, &size, &bound);
     
     pcg32 *rng = (pcg32 *)PyCapsule_GetPointer(rngCapsule, "rngPtr");
     result.reserve(size);
 
-    for (uint32_t i = 0; i < size; i++) {
-        result.push_back(rng->operator()());
+    if (bound > 0) {
+        for (uint32_t i = 0; i < size; i++) {
+            result.push_back(rng->operator()(bound));
+        }
+    } else {
+        for (uint32_t i = 0; i < size; i++) {
+            result.push_back(rng->operator()());
+        }
     }
     
     return vectorUint32ToListInt(result);
@@ -53,9 +60,9 @@ PyMethodDef PCGCPPFunctions[] = {
       construct32, METH_VARARGS,
      "Create `PCGCPP` object."},
     
-    {"rand",
-      rand32, METH_VARARGS,
-     "Obtain 1 or more random integers."},
+    {"randint",
+      randint32, METH_VARARGS,
+     "Obtain 1 or more random integers, with an optional bound."},
 
     {NULL, NULL, 0, NULL}      // Last function description must be empty.
                                // Otherwise, it will create seg fault while
