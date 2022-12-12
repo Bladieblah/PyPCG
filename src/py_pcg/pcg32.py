@@ -1,6 +1,18 @@
 import PCGCPP
 
 class PCG32:
+    """Wrapper around the pcg32 class.
+    
+    >>> rng = PCG32(42)
+    >>> rng.rand()
+    589627368
+    >>> rng.rand()
+    2336806640
+    
+    >>> rng = PCG32(42, 54)
+    >>> rng.rand(2)
+    [1070908346, 3346215311]
+    """
     def __init__(self, stream = None, state = None):
         if stream and state:
             self.capsule = PCGCPP.construct(stream, state)
@@ -17,16 +29,6 @@ class PCG32:
         
         return result
 
-
-if __name__ == '__main__':
-    rng = PCG32()
-    print(rng.rand())
-    rng = PCG32()
-    print(rng.rand())
-    rng = PCG32(42)
-    print(rng.rand())
-    rng = PCG32(42, 54)
-    print(rng.rand())
-    rng = PCG32(42, 54)
-    print(rng.rand(2))
-    print(rng.rand(2))
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
