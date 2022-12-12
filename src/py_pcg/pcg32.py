@@ -51,10 +51,10 @@ class PCG32:
         """Draw a random number following a standard normal PDF.
 
         >>> rng = PCG32(42 ,54)
-        >>> rng.rand(2)
-        [0.24934027949348092, 0.7791014646645635]
+        >>> rng.randn(2)
+        [-0.6765672580042227, 0.7691621258667373]
         """
-        result = PCGCPP.rand(self.capsule, size)
+        result = PCGCPP.randn(self.capsule, size)
 
         if size == 1:
             return result[0]
