@@ -46,6 +46,20 @@ class PCG32:
             return result[0]
         
         return result
+    
+    def randn(self, size = 1):
+        """Draw a random number following a standard normal PDF.
+
+        >>> rng = PCG32(42 ,54)
+        >>> rng.rand(2)
+        [0.24934027949348092, 0.7791014646645635]
+        """
+        result = PCGCPP.rand(self.capsule, size)
+
+        if size == 1:
+            return result[0]
+        
+        return result
 
 if __name__ == "__main__":
     import doctest
