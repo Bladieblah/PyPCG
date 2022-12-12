@@ -11,20 +11,24 @@ using namespace std;
 // ------------------- Class wrappers -------------------
 
 PyObject *construct32(PyObject *self, PyObject *args) {
-    uint64_t *stream = NULL;
-    uint64_t state = 0x853c49e6748fea9bULL; // Taken from the minimal C implementation
-    PyArg_ParseTuple(args, "|kk", stream, &state);
+    uint64_t stream = 0xda3e39cb94b95bdbULL; // Taken from the minimal C implementation
+    uint64_t state = 0x853c49e6748fea9bULL;
+
+    fprintf(stderr, "ParseTuple\n");
+
+    PyArg_ParseTuple(args, "|kk", &stream, &state);
+
+    fprintf(stderr, "Seeding rng\n");
     
-    pcg32 *rng;
-    if (stream) {
-        rng = new pcg32(state, *stream);
-    } else {
-        rng = new pcg32();
-        rng->seed(pcg_extras::seed_seq_from<std::random_device>());
-    }
+    pcg32 *rng = new pcg32();
+    rng->seed(pcg_extras::seed_seq_from<std::random_device>());
+
+    fprintf(stderr, "Capsule\n");
     
     PyObject *rngCapsule = PyCapsule_New((void *)rng, "rngPtr", NULL);
     PyCapsule_SetPointer(rngCapsule, (void *)rng);
+
+    fprintf(stderr, "Returning\n");
     
     return Py_BuildValue("O", rngCapsule);
 }
@@ -34,10 +38,13 @@ PyObject *rand32(PyObject *self, PyObject *args) {
     uint32_t size = 1;
     
     PyObject *rngCapsule = NULL;
-    PyArg_ParseTuple(args, "|I", &size);
-    result.reserve(size);
+    PyArg_ParseTuple(args, "O|I", &rngCapsule, &size);
     
     pcg32 rng = *(pcg32 *)PyCapsule_GetPointer(rngCapsule, "rngPtr");
+    result.reserve(size);
+
+
+    fprintf(stderr, "Pulling %d random numbers\n", size);
 
     for (uint32_t i = 0; i < size; i++) {
         result[i] = rng();
@@ -46,10 +53,10 @@ PyObject *rand32(PyObject *self, PyObject *args) {
     return vectorUint32ToListInt(result);
 }
 
-PyMethodDef PyPcgFunctions[] = {
+PyMethodDef PCGCPPFunctions[] = {
     {"construct",
       construct32, METH_VARARGS,
-     "Create `PyPCG` object."},
+     "Create `PCGCPP` object."},
     
     {"rand",
       rand32, METH_VARARGS,
@@ -61,7 +68,7 @@ PyMethodDef PyPcgFunctions[] = {
 };
 
 
-struct PyModuleDef PyPcgModule = {
+struct PyModuleDef PCGCPPModule = {
 /*
  *  Structure which defines the module.
  *
@@ -69,15 +76,15 @@ struct PyModuleDef PyPcgModule = {
  *
  */
    PyModuleDef_HEAD_INIT,
-   "PyPCG",
+   "PCGCPP",
    "Python wrapper around the pcg-cpp library.", 
    // Docstring for the module.
    -1,                   // Used by sub-interpreters, if you do not know what
                          // it is then you do not need it, keep -1 .
-   PyPcgFunctions
+   PCGCPPFunctions
 };
 
 
-PyMODINIT_FUNC PyInit_PyPcg(void) {
-    return PyModule_Create(&PyPcgModule);
+PyMODINIT_FUNC PyInit_PCGCPP(void) {
+    return PyModule_Create(&PCGCPPModule);
 }
