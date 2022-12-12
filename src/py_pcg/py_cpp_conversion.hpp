@@ -10,6 +10,8 @@
 
 PyObject *vectorUint32ToListInt(const std::vector<uint32_t> &data);
 
+PyObject *vectorDoubleToListFloat(const std::vector<double> &data);
+
 PyObject *vectorVectorUint32ToListListInt(const std::vector< std::vector<uint32_t> > &data);
 
 #endif

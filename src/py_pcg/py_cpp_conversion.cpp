@@ -44,3 +44,19 @@ PyObject *vectorVectorUint32ToListListInt(const vector< vector<uint32_t> > &data
 
     return list;
 }
+
+PyObject *vectorDoubleToListFloat(const std::vector<double> &data) {
+    PyObject *listObj = PyList_New(data.size());
+	if (!listObj) throw logic_error("Unable to allocate memory for Python list 3");
+	
+	for (unsigned int i = 0; i < data.size(); i++) {
+		PyObject *num = PyFloat_FromDouble( data[i]);
+		if (!num) {
+			Py_DECREF(listObj);
+			throw logic_error("Unable to allocate memory for Python list 4");
+		}
+		PyList_SET_ITEM(listObj, i, num);
+	}
+    
+	return listObj;
+}

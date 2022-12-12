@@ -8,6 +8,8 @@
 
 using namespace std;
 
+#define PCG32_MAX1 (double)4294967296.0
+
 // ------------------- Class wrappers -------------------
 
 PyObject *construct32(PyObject *self, PyObject *args) {
@@ -55,6 +57,23 @@ PyObject *randint32(PyObject *self, PyObject *args) {
     return vectorUint32ToListInt(result);
 }
 
+PyObject *rand32(PyObject *self, PyObject *args) {
+    vector<double> result;
+    uint32_t size = 1;
+    
+    PyObject *rngCapsule = NULL;
+    PyArg_ParseTuple(args, "O|I", &rngCapsule, &size);
+    
+    pcg32 *rng = (pcg32 *)PyCapsule_GetPointer(rngCapsule, "rngPtr");
+    result.reserve(size);
+
+    for (uint32_t i = 0; i < size; i++) {
+        result.push_back(rng->operator()() / PCG32_MAX1);
+    }
+    
+    return vectorDoubleToListFloat(result);
+}
+
 PyMethodDef PCGCPPFunctions[] = {
     {"construct",
       construct32, METH_VARARGS,
@@ -63,6 +82,10 @@ PyMethodDef PCGCPPFunctions[] = {
     {"randint",
       randint32, METH_VARARGS,
      "Obtain 1 or more random integers, with an optional bound."},
+    
+    {"rand",
+      rand32, METH_VARARGS,
+     "Obtain 1 or more random doubles in the range [0,1)."},
 
     {NULL, NULL, 0, NULL}      // Last function description must be empty.
                                // Otherwise, it will create seg fault while
