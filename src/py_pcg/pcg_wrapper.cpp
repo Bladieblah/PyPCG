@@ -14,21 +14,19 @@ PyObject *construct32(PyObject *self, PyObject *args) {
     uint64_t stream = 0xda3e39cb94b95bdbULL; // Taken from the minimal C implementation
     uint64_t state = 0x853c49e6748fea9bULL;
 
-    fprintf(stderr, "ParseTuple\n");
-
     PyArg_ParseTuple(args, "|kk", &stream, &state);
-
-    fprintf(stderr, "Seeding rng\n");
     
-    pcg32 *rng = new pcg32();
-    rng->seed(pcg_extras::seed_seq_from<std::random_device>());
+    pcg32 *rng;
 
-    fprintf(stderr, "Capsule\n");
+    if (stream == 0xda3e39cb94b95bdbULL) {
+        rng = new pcg32();
+        rng->seed(pcg_extras::seed_seq_from<std::random_device>());
+    } else {
+        rng = new pcg32(state, stream);
+    }
     
     PyObject *rngCapsule = PyCapsule_New((void *)rng, "rngPtr", NULL);
     PyCapsule_SetPointer(rngCapsule, (void *)rng);
-
-    fprintf(stderr, "Returning\n");
     
     return Py_BuildValue("O", rngCapsule);
 }
@@ -40,14 +38,11 @@ PyObject *rand32(PyObject *self, PyObject *args) {
     PyObject *rngCapsule = NULL;
     PyArg_ParseTuple(args, "O|I", &rngCapsule, &size);
     
-    pcg32 rng = *(pcg32 *)PyCapsule_GetPointer(rngCapsule, "rngPtr");
+    pcg32 *rng = (pcg32 *)PyCapsule_GetPointer(rngCapsule, "rngPtr");
     result.reserve(size);
 
-
-    fprintf(stderr, "Pulling %d random numbers\n", size);
-
     for (uint32_t i = 0; i < size; i++) {
-        result[i] = rng();
+        result.push_back(rng->operator()());
     }
     
     return vectorUint32ToListInt(result);
