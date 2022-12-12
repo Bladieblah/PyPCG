@@ -3,6 +3,8 @@
 #include <vector>
 
 #include "Python.h"
+
+#include "normal_cdf.hpp"
 #include "pcg_random.hpp"
 #include "py_cpp_conversion.hpp"
 
@@ -74,6 +76,25 @@ PyObject *rand32(PyObject *self, PyObject *args) {
     return vectorDoubleToListFloat(result);
 }
 
+PyObject *randn32(PyObject *self, PyObject *args) {
+    vector<double> result;
+    uint32_t size = 1;
+    
+    PyObject *rngCapsule = NULL;
+    PyArg_ParseTuple(args, "O|I", &rngCapsule, &size);
+    
+    pcg32 *rng = (pcg32 *)PyCapsule_GetPointer(rngCapsule, "rngPtr");
+    result.reserve(size);
+
+    for (uint32_t i = 0; i < size; i++) {
+        result.push_back(inverse_normal_cdf(rng->operator()() / PCG32_MAX1));
+    }
+    
+    return vectorDoubleToListFloat(result);
+}
+
+// --------------------- Module definitions ---------------------
+
 PyMethodDef PCGCPPFunctions[] = {
     {"construct",
       construct32, METH_VARARGS,
@@ -86,26 +107,19 @@ PyMethodDef PCGCPPFunctions[] = {
     {"rand",
       rand32, METH_VARARGS,
      "Obtain 1 or more random doubles in the range [0,1)."},
+    
+    {"randn",
+      randn32, METH_VARARGS,
+     "Obtain 1 or more random doubles following a standard normal PDF."},
 
-    {NULL, NULL, 0, NULL}      // Last function description must be empty.
-                               // Otherwise, it will create seg fault while
-                               // importing the module.
+    {NULL, NULL, 0, NULL}
 };
 
-
 struct PyModuleDef PCGCPPModule = {
-/*
- *  Structure which defines the module.
- *
- *  For more info look at: https://docs.python.org/3/c-api/module.html
- *
- */
    PyModuleDef_HEAD_INIT,
    "PCGCPP",
    "Python wrapper around the pcg-cpp library.", 
-   // Docstring for the module.
-   -1,                   // Used by sub-interpreters, if you do not know what
-                         // it is then you do not need it, keep -1 .
+   -1,
    PCGCPPFunctions
 };
 
