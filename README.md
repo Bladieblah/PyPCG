@@ -1,54 +1,15 @@
-# infra-python-template
+# PyPCG
 
-## Preparing the template
+This is a python wrapper around the pcg-cpp library, for randum number generation using the _permuted congruential generator_ method.
 
-Template for python-based microservices. To do:
- - Add your app to the `infra-dyme-provisioner` repo
- - Add a bucket and serviceaccount for each env in the `infra-system-polder` repo
- - Update setup.cfg
+Usage:
 
-Find and replace:
- - `dyme_module` -> `your_module_name`
- - `dyme-module` -> `your-module-name`
- - `dymemodule-sa` -> gcloud service account name, matching the service account name in  `infra-system-polder`
+```python
+import py_pcg
 
-And then start building!
+rng = py_pcg.pcg32()
+rng = py_pcg.pcg32(42, 9001) # Seed with initial stream and state
 
-## Building the module
-
-First, create and activate a virtual environment to prevent versioning conflicts.
-```bash
-virtualenv dyme_module_venv
-source dyme_module_venv/bin/activate
-```
-
-Now you can build and install the module.
-```bash
-python setup.py build
-pip install .
-```
-
-Build and train the model with 
-```bash
-python -m dyme_module.create_model
-```
-
-## Testing
-
-Write tests in the `tests` folder, following the `test_*.py` naming convention. Run them with
-```bash
-python -m unittest
-```
-
-## Development
-```
-
-Specify any dependencies that are not required in production in `requirements-dev.txt`. Install the dependencies with
-```bash
-pip install -r requirements-dev.txt
-```
-
-To make the virtual environment available as a kernel in Jupyter, run
-```bash
-ipython kernel install --name "dyme_module_venv" --user
+rng.rand()     # Generate a single random number
+rng.rand(1000) # Generate a list of random numbers
 ```
