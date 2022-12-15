@@ -1,6 +1,5 @@
 #include <random>
 #include <stdio.h>
-#include <vector>
 
 #include <Python.h>
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
@@ -37,7 +36,7 @@ PyObject *construct32(PyObject *self, PyObject *args) {
 }
 
 PyObject *randint32(PyObject *self, PyObject *args) {
-    vector<uint32_t> result;
+    uint32_t *result;
     uint32_t size = 1;
     uint32_t bound = 0;
     
@@ -45,56 +44,56 @@ PyObject *randint32(PyObject *self, PyObject *args) {
     PyArg_ParseTuple(args, "O|II", &rngCapsule, &size, &bound);
     
     pcg32 *rng = (pcg32 *)PyCapsule_GetPointer(rngCapsule, "rngPtr");
-    result.reserve(size);
+    result = (uint32_t *)malloc(size * sizeof(uint32_t));
 
     if (bound > 0) {
         for (uint32_t i = 0; i < size; i++) {
-            result.push_back(rng->operator()(bound));
+            result[i] = rng->operator()(bound);
         }
     } else {
         for (uint32_t i = 0; i < size; i++) {
-            result.push_back(rng->operator()());
+            result[i] = rng->operator()();
         }
     }
     
     npy_intp dims[1] = {size};
-    return PyArray_SimpleNewFromData(1, dims, NPY_UINT32, (void *)&(result[0]));
+    return PyArray_SimpleNewFromData(1, dims, NPY_UINT32, result);
 }
 
 PyObject *rand32(PyObject *self, PyObject *args) {
-    vector<double> result;
+    double *result;
     uint32_t size = 1;
     
     PyObject *rngCapsule = NULL;
     PyArg_ParseTuple(args, "O|I", &rngCapsule, &size);
     
     pcg32 *rng = (pcg32 *)PyCapsule_GetPointer(rngCapsule, "rngPtr");
-    result.reserve(size);
+    result = (double *)malloc(size * sizeof(double));
 
     for (uint32_t i = 0; i < size; i++) {
-        result.push_back(rng->operator()() / PCG32_MAX1);
+        result[i] = rng->operator()() / PCG32_MAX1;
     }
     
     npy_intp dims[1] = {size};
-    return PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, (void *)&(result[0]));
+    return PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, result);
 }
 
 PyObject *randn32(PyObject *self, PyObject *args) {
-    vector<double> result;
+    double *result;
     uint32_t size = 1;
     
     PyObject *rngCapsule = NULL;
     PyArg_ParseTuple(args, "O|I", &rngCapsule, &size);
     
     pcg32 *rng = (pcg32 *)PyCapsule_GetPointer(rngCapsule, "rngPtr");
-    result.reserve(size);
+    result = (double *)malloc(size * sizeof(double));
 
     for (uint32_t i = 0; i < size; i++) {
-        result.push_back(inverse_normal_cdf(rng->operator()() / PCG32_MAX1));
+        result[i] = inverse_normal_cdf(rng->operator()() / PCG32_MAX1);
     }
     
     npy_intp dims[1] = {size};
-    return PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, (void *)&(result[0]));
+    return PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, result);
 }
 
 // --------------------- Module definitions ---------------------
