@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "Python.h"
+#include <Python.h>
 
 // ------------------- Helpers for converting between Python and C++ -------------------
 

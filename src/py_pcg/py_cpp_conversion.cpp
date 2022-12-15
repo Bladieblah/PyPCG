@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 
-#include "Python.h"
+#include <Python.h>
 #include "py_cpp_conversion.hpp"
 
 using namespace std;

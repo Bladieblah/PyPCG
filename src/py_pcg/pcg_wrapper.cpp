@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <vector>
 
-#include "Python.h"
+#include <Python.h>
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
 
 #include "normal_cdf.hpp"
 #include "pcg_random.hpp"
@@ -56,7 +58,8 @@ PyObject *randint32(PyObject *self, PyObject *args) {
         }
     }
     
-    return vectorUint32ToListInt(result);
+    npy_intp dims[1] = {size};
+    return PyArray_SimpleNewFromData(1, dims, NPY_UINT32, (void *)&(result[0]));
 }
 
 PyObject *rand32(PyObject *self, PyObject *args) {
@@ -125,5 +128,6 @@ struct PyModuleDef PCGCPPModule = {
 
 
 PyMODINIT_FUNC PyInit_PCGCPP(void) {
+    import_array();
     return PyModule_Create(&PCGCPPModule);
 }
