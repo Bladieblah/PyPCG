@@ -76,7 +76,8 @@ PyObject *rand32(PyObject *self, PyObject *args) {
         result.push_back(rng->operator()() / PCG32_MAX1);
     }
     
-    return vectorDoubleToListFloat(result);
+    npy_intp dims[1] = {size};
+    return PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, (void *)&(result[0]));
 }
 
 PyObject *randn32(PyObject *self, PyObject *args) {
@@ -93,7 +94,8 @@ PyObject *randn32(PyObject *self, PyObject *args) {
         result.push_back(inverse_normal_cdf(rng->operator()() / PCG32_MAX1));
     }
     
-    return vectorDoubleToListFloat(result);
+    npy_intp dims[1] = {size};
+    return PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, (void *)&(result[0]));
 }
 
 // --------------------- Module definitions ---------------------
