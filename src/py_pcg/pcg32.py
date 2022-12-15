@@ -21,9 +21,9 @@ class PCG32:
         """Draw a random integer, with an optional upper bound.
         
         >>> rng = PCG32(42, 54)
-        >>> rng.randint(2)
+        >>> rng.randint(2).tolist()
         [1070908346, 3346215311]
-        >>> rng.randint(2, bound=100)
+        >>> rng.randint(2, bound=100).tolist()
         [67, 65]
         """
         result = PCGCPP.randint(self.capsule, size, bound)
@@ -37,7 +37,7 @@ class PCG32:
         """Draw a uniform random number in the interval [0,1).
 
         >>> rng = PCG32(42 ,54)
-        >>> rng.rand(2)
+        >>> rng.rand(2).tolist()
         [0.24934027949348092, 0.7791014646645635]
         """
         result = PCGCPP.rand(self.capsule, size)
@@ -51,7 +51,7 @@ class PCG32:
         """Draw a random number following a standard normal PDF.
 
         >>> rng = PCG32(42 ,54)
-        >>> rng.randn(2)
+        >>> rng.randn(2).tolist()
         [-0.6765672580042227, 0.7691621258667373]
         """
         result = PCGCPP.randn(self.capsule, size)
