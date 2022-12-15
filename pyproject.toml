@@ -19,5 +19,8 @@ classifiers = [
 "Bug Tracker" = "https://github.com/Bladieblah/PyPCG/issues"
 
 [build-system]
-requires = ["setuptools>=42"]
+requires = [
+    "setuptools>=42",
+    "numpy == 1.21.6",
+]
 build-backend = "setuptools.build_meta"

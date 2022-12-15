@@ -1,4 +1,5 @@
 from setuptools import Extension, setup
+import numpy as np
 
 PCGCPP = Extension(
     'PCGCPP',
@@ -10,6 +11,7 @@ PCGCPP = Extension(
     include_dirs = [
         'src/pcg-cpp/include',
         'src/py_pcg',
+        np.get_include(),
     ],
     extra_compile_args=[
         '-std=c++11',
