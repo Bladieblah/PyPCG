@@ -16,10 +16,10 @@ using namespace std;
 
 PyObject *construct32(PyObject *self, PyObject *args) {
     uint64_t stream = 0xda3e39cb94b95bdbULL; // Taken from the minimal C implementation
-    uint64_t state = 0x853c49e6748fea9bULL;
+    uint64_t state  = 0x853c49e6748fea9bULL;
 
     PyArg_ParseTuple(args, "|kk", &stream, &state);
-    
+
     pcg32 *rng;
 
     if (stream == 0xda3e39cb94b95bdbULL) {
@@ -28,10 +28,10 @@ PyObject *construct32(PyObject *self, PyObject *args) {
     } else {
         rng = new pcg32(state, stream);
     }
-    
+
     PyObject *rngCapsule = PyCapsule_New((void *)rng, "rngPtr", NULL);
     PyCapsule_SetPointer(rngCapsule, (void *)rng);
-    
+
     return Py_BuildValue("O", rngCapsule);
 }
 
@@ -39,10 +39,10 @@ PyObject *randint32(PyObject *self, PyObject *args) {
     uint32_t *result;
     uint32_t size = 1;
     uint32_t bound = 0;
-    
+
     PyObject *rngCapsule = NULL;
     PyArg_ParseTuple(args, "O|II", &rngCapsule, &size, &bound);
-    
+
     pcg32 *rng = (pcg32 *)PyCapsule_GetPointer(rngCapsule, "rngPtr");
     result = (uint32_t *)malloc(size * sizeof(uint32_t));
 
@@ -55,7 +55,7 @@ PyObject *randint32(PyObject *self, PyObject *args) {
             result[i] = rng->operator()();
         }
     }
-    
+
     npy_intp dims[1] = {size};
     return PyArray_SimpleNewFromData(1, dims, NPY_UINT32, result);
 }
@@ -63,17 +63,17 @@ PyObject *randint32(PyObject *self, PyObject *args) {
 PyObject *rand32(PyObject *self, PyObject *args) {
     double *result;
     uint32_t size = 1;
-    
+
     PyObject *rngCapsule = NULL;
     PyArg_ParseTuple(args, "O|I", &rngCapsule, &size);
-    
+
     pcg32 *rng = (pcg32 *)PyCapsule_GetPointer(rngCapsule, "rngPtr");
     result = (double *)malloc(size * sizeof(double));
 
     for (uint32_t i = 0; i < size; i++) {
         result[i] = rng->operator()() / PCG32_MAX1;
     }
-    
+
     npy_intp dims[1] = {size};
     return PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, result);
 }
@@ -81,17 +81,17 @@ PyObject *rand32(PyObject *self, PyObject *args) {
 PyObject *randn32(PyObject *self, PyObject *args) {
     double *result;
     uint32_t size = 1;
-    
+
     PyObject *rngCapsule = NULL;
     PyArg_ParseTuple(args, "O|I", &rngCapsule, &size);
-    
+
     pcg32 *rng = (pcg32 *)PyCapsule_GetPointer(rngCapsule, "rngPtr");
     result = (double *)malloc(size * sizeof(double));
 
     for (uint32_t i = 0; i < size; i++) {
         result[i] = inverse_normal_cdf(rng->operator()() / PCG32_MAX1);
     }
-    
+
     npy_intp dims[1] = {size};
     return PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, result);
 }
@@ -102,15 +102,15 @@ PyMethodDef PCGCPPFunctions[] = {
     {"construct",
       construct32, METH_VARARGS,
      "Create `PCGCPP` object."},
-    
+
     {"randint",
       randint32, METH_VARARGS,
      "Obtain 1 or more random integers, with an optional bound."},
-    
+
     {"rand",
       rand32, METH_VARARGS,
      "Obtain 1 or more random doubles in the range [0,1)."},
-    
+
     {"randn",
       randn32, METH_VARARGS,
      "Obtain 1 or more random doubles following a standard normal PDF."},
