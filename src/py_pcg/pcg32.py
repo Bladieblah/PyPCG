@@ -38,7 +38,7 @@ class PCG32:
     def rand(self, size: int = 1) -> Union[npt.NDArray[Any], float]:
         """Draw a uniform random number in the interval [0,1).
 
-        >>> rng = PCG32(42 ,54)
+        >>> rng = PCG32(42, 54)
         >>> rng.rand(2).tolist()
         [0.24934027949348092, 0.7791014646645635]
         """
@@ -52,7 +52,7 @@ class PCG32:
     def randn(self, size: int = 1) -> Union[npt.NDArray[Any], float]:
         """Draw a random number following a standard normal PDF.
 
-        >>> rng = PCG32(42 ,54)
+        >>> rng = PCG32(42, 54)
         >>> rng.randn(2).tolist()
         [-0.6765672580042227, 0.7691621258667373]
         """
@@ -65,4 +65,4 @@ class PCG32:
 
 if __name__ == "__main__":
     import doctest
-    doctest.testmod()
+    doctest.testmod(verbose=True)
