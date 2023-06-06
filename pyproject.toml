@@ -1,6 +1,6 @@
 [project]
 name = "Python-PCG"
-version = "0.1.1"
+version = "0.2"
 authors = [
     { name  = "Matthijs Wesseling", email = "matthijs.wesseling@dyme.app" },
 ]
@@ -12,6 +12,9 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
     "License :: OSI Approved :: MIT License",
+]
+dependencies = [
+    "numpy>=1.21.6",
 ]
 
 [project.urls]
